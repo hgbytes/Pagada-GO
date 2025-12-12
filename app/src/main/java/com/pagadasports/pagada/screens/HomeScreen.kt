@@ -8,9 +8,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -20,11 +21,61 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pagadasports.pagada.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(
+    modifier: Modifier = Modifier,
+    onSignOut: () -> Unit = {},
+    authViewModel: AuthViewModel = viewModel()
+) {
     val scrollState = rememberScrollState()
+    val authState by authViewModel.authState.collectAsState()
+    var showSignOutDialog by remember { mutableStateOf(false) }
+
+    // Get user's display name from Supabase metadata
+    val userName = remember(authState.user) {
+        authState.user?.userMetadata?.get("display_name")
+            ?.toString()
+            ?.replace("\"", "") // Remove JSON quotes
+            ?: authState.user?.userMetadata?.get("full_name")
+            ?.toString()
+            ?.replace("\"", "")
+            ?: "Athlete"
+    }
+
+    // Navigate back to landing when signed out
+    LaunchedEffect(authState.isAuthenticated) {
+        if (!authState.isAuthenticated) {
+            onSignOut()
+        }
+    }
+
+    // Sign out confirmation dialog
+    if (showSignOutDialog) {
+        AlertDialog(
+            onDismissRequest = { showSignOutDialog = false },
+            title = { Text("Sign Out") },
+            text = { Text("Are you sure you want to sign out?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSignOutDialog = false
+                        authViewModel.signOut(onSuccess = {})
+                    }
+                ) {
+                    Text("Sign Out")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Box(
         modifier = modifier
@@ -54,7 +105,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             ) {
                 Column {
                     Text(
-                        text = "Welcome back!",
+                        text = "Welcome back, $userName!",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                     )
@@ -67,15 +118,28 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                     )
                 }
 
-                IconButton(
-                    onClick = { /* TODO: Handle notifications */ },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Badge {
+                Row {
+                    IconButton(
+                        onClick = { /* TODO: Handle notifications */ },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Badge {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = "Notifications",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = { showSignOutDialog = true },
+                        modifier = Modifier.size(48.dp)
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = MaterialTheme.colorScheme.primary
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Sign Out",
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }

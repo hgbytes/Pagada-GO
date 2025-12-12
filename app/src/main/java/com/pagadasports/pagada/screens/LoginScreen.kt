@@ -35,7 +35,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pagadasports.pagada.R
+import com.pagadasports.pagada.viewmodel.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,22 +45,39 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     onRegisterClick: () -> Unit,
     onBackClick: () -> Unit,
-    onLoginSuccess: () -> Unit = {}
+    onLoginSuccess: () -> Unit = {},
+    authViewModel: AuthViewModel = viewModel()
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
-    var isLoading by rememberSaveable { mutableStateOf(false) }
     var emailError by rememberSaveable { mutableStateOf("") }
     var passwordError by rememberSaveable { mutableStateOf("") }
 
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
+    val authState by authViewModel.authState.collectAsState()
 
     // Validation
     val isEmailValid = email.isNotEmpty() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     val isPasswordValid = password.isNotEmpty() && password.length >= 6
     val isFormValid = isEmailValid && isPasswordValid
+
+    // Show error from auth state
+    LaunchedEffect(authState.error) {
+        authState.error?.let { error ->
+            emailError = error
+        }
+    }
+
+    // Navigate on successful authentication
+    LaunchedEffect(authState.isAuthenticated) {
+        android.util.Log.d("LoginScreen", "Auth state changed: isAuthenticated=${authState.isAuthenticated}")
+        if (authState.isAuthenticated) {
+            android.util.Log.d("LoginScreen", "Calling onLoginSuccess()")
+            onLoginSuccess()
+        }
+    }
 
     Box(
         modifier = modifier
@@ -110,7 +129,7 @@ fun LoginScreen(
                 // Login Form
                 Card(
                     modifier = Modifier
-                        .padding(horizontal = 20.dp , vertical = 10.dp),
+                        .padding(horizontal = 20.dp, vertical = 10.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f)
                     ),
@@ -137,6 +156,7 @@ fun LoginScreen(
                             onValueChange = {
                                 email = it
                                 emailError = ""
+                                authViewModel.clearError()
                             },
                             label = { Text(stringResource(R.string.email_address)) },
                             leadingIcon = {
@@ -173,6 +193,7 @@ fun LoginScreen(
                             onValueChange = {
                                 password = it
                                 passwordError = ""
+                                authViewModel.clearError()
                             },
                             label = { Text(stringResource(R.string.password)) },
                             leadingIcon = {
@@ -204,7 +225,7 @@ fun LoginScreen(
                                 onDone = {
                                     focusManager.clearFocus()
                                     if (isFormValid) {
-                                        // Handle login
+                                        authViewModel.signIn(email, password)
                                     }
                                 }
                             ),
@@ -250,23 +271,20 @@ fun LoginScreen(
                                 }
 
                                 if (isFormValid) {
-                                    isLoading = true
-                                    // TODO: Handle login logic
-                                    // For now, simulate success after delay
-                                    onLoginSuccess()
+                                    authViewModel.signIn(email, password)
                                 }
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
-                            enabled = !isLoading,
+                            enabled = !authState.isLoading,
                             shape = RoundedCornerShape(28.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             ),
                             elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                         ) {
-                            if (isLoading) {
+                            if (authState.isLoading) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(24.dp),
                                     color = MaterialTheme.colorScheme.onPrimary,
@@ -318,3 +336,4 @@ fun LoginScreen(
         }
     }
 }
+

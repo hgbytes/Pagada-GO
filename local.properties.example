@@ -1,0 +1,15 @@
+# local.properties.example
+# Copy this file to local.properties and replace the placeholder values
+
+# Android SDK location
+sdk.dir=/path/to/your/Android/Sdk
+
+# Supabase Configuration
+# Get your credentials from: https://app.supabase.com/project/_/settings/api
+supabase.url=YOUR_SUPABASE_PROJECT_URL
+supabase.anon.key=YOUR_SUPABASE_ANON_PUBLIC_KEY
+
+# Example:
+# supabase.url=https://abcdefghijk.supabase.co
+# supabase.anon.key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+

@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pagadasports.pagada.viewmodel.AuthViewModel
 
 private fun validatePassword(password: String): List<String> {
     val errors = mutableListOf<String>()
@@ -61,7 +63,8 @@ fun RegisterScreen(
     modifier: Modifier = Modifier,
     onLoginClick: () -> Unit,
     onBackClick: () -> Unit,
-    onRegisterSuccess: () -> Unit = {}
+    onRegisterSuccess: () -> Unit = {},
+    authViewModel: AuthViewModel = viewModel()
 ) {
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -69,11 +72,12 @@ fun RegisterScreen(
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
-    var isLoading by rememberSaveable { mutableStateOf(false) }
     var termsAccepted by rememberSaveable { mutableStateOf(false) }
+    var emailError by rememberSaveable { mutableStateOf("") }
 
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
+    val authState by authViewModel.authState.collectAsState()
 
     // Validation
     val passwordErrors = validatePassword(password)
@@ -82,6 +86,31 @@ fun RegisterScreen(
     val arePasswordsMatching = password == confirmPassword && confirmPassword.isNotEmpty()
     val isPasswordValid = passwordErrors.isEmpty() && password.isNotEmpty()
     val isFormValid = isNameValid && isEmailValid && arePasswordsMatching && isPasswordValid && termsAccepted
+
+    // Show error message when registration fails
+    LaunchedEffect(authState.error) {
+        authState.error?.let { error ->
+            android.util.Log.d("RegisterScreen", "Auth error: $error")
+            // Check if it's an email already exists error
+            if (error.contains("already", ignoreCase = true) ||
+                error.contains("exists", ignoreCase = true) ||
+                error.contains("registered", ignoreCase = true) ||
+                error.contains("User already registered", ignoreCase = true)) {
+                emailError = "This email is already registered"
+            } else {
+                emailError = error
+            }
+        }
+    }
+
+    // Navigate on successful authentication
+    LaunchedEffect(authState.isAuthenticated) {
+        android.util.Log.d("RegisterScreen", "Auth state changed: isAuthenticated=${authState.isAuthenticated}")
+        if (authState.isAuthenticated) {
+            android.util.Log.d("RegisterScreen", "Calling onRegisterSuccess()")
+            onRegisterSuccess()
+        }
+    }
 
     Box(
         modifier = modifier
@@ -190,7 +219,11 @@ fun RegisterScreen(
                     // Email Field
                     OutlinedTextField(
                         value = email,
-                        onValueChange = { email = it },
+                        onValueChange = {
+                            email = it
+                            emailError = "" // Clear error when user types
+                            authViewModel.clearError() // Clear error in ViewModel too
+                        },
                         label = { Text("Email Address") },
                         leadingIcon = {
                             Icon(
@@ -208,8 +241,10 @@ fun RegisterScreen(
                             onNext = { focusManager.moveFocus(FocusDirection.Down) }
                         ),
                         singleLine = true,
-                        isError = !isEmailValid && email.isNotEmpty(),
-                        supportingText = if (!isEmailValid && email.isNotEmpty()) {
+                        isError = emailError.isNotEmpty() || (!isEmailValid && email.isNotEmpty()),
+                        supportingText = if (emailError.isNotEmpty()) {
+                            { Text(emailError, color = MaterialTheme.colorScheme.error) }
+                        } else if (!isEmailValid && email.isNotEmpty()) {
                             { Text("Please enter a valid email address", color = MaterialTheme.colorScheme.error) }
                         } else null,
                         shape = RoundedCornerShape(16.dp),
@@ -219,6 +254,45 @@ fun RegisterScreen(
                             focusedLabelColor = MaterialTheme.colorScheme.primary
                         )
                     )
+
+                    // Show "Already have an account?" card when email exists
+                    if (emailError.contains("already registered", ignoreCase = true)) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Already have an account?",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(
+                                    onClick = {
+                                        emailError = ""
+                                        authViewModel.clearError()
+                                        onLoginClick()
+                                    }
+                                ) {
+                                    Text(
+                                        "Login Here",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     // Password Field
                     OutlinedTextField(
@@ -371,21 +445,20 @@ fun RegisterScreen(
                         onClick = {
                             focusManager.clearFocus()
                             if (isFormValid) {
-                                isLoading = true
-                                // TODO: Handle registration logic
+                                authViewModel.signUp(email, password, name)
                             }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        enabled = isFormValid && !isLoading,
+                        enabled = isFormValid && !authState.isLoading,
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                     ) {
-                        if (isLoading) {
+                        if (authState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(21.dp),
                                 color = MaterialTheme.colorScheme.onPrimary,

@@ -50,7 +50,13 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("home") {
-                        HomeScreen()
+                        HomeScreen(
+                            onSignOut = {
+                                navController.navigate("landing") {
+                                    popUpTo(0) { inclusive = true }
+                                }
+                            }
+                        )
                     }
                 }
             }
