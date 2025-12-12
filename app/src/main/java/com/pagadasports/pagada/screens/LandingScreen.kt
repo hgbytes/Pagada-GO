@@ -26,6 +26,7 @@ fun LandingScreen(
     onRegisterClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -42,10 +43,10 @@ fun LandingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.height(120.dp))
 
             // Logo/Brand Section
             Card(
@@ -70,7 +71,7 @@ fun LandingScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(100.dp))
 
             // App Title
             Text(
@@ -94,27 +95,27 @@ fun LandingScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Features Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                FeatureCard(
-                    icon = Icons.Default.EmojiEvents,
-                    title = "Compete",
-                    description = "Join tournaments"
-                )
-                FeatureCard(
-                    icon = Icons.Default.Group,
-                    title = "Connect",
-                    description = "Meet athletes"
-                )
-                FeatureCard(
-                    icon = Icons.AutoMirrored.Filled.DirectionsRun,
-                    title = "Train",
-                    description = "Track progress"
-                )
-            }
+//            // Features Section
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.SpaceEvenly
+//            ) {
+//                FeatureCard(
+//                    icon = Icons.Default.EmojiEvents,
+//                    title = "Compete",
+//                    description = "Join tournaments"
+//                )
+//                FeatureCard(
+//                    icon = Icons.Default.Group,
+//                    title = "Connect",
+//                    description = "Meet athletes"
+//                )
+//                FeatureCard(
+//                    icon = Icons.AutoMirrored.Filled.DirectionsRun,
+//                    title = "Train",
+//                    description = "Track progress"
+//                )
+//            }
 
             Spacer(modifier = Modifier.weight(1f))
 

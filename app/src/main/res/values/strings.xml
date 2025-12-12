@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">Pagada</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="back_content_description">Back</string>
+    <string name="sign_in_to_account">Sign in to your account</string>
+    <string name="email_address">Email Address</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="sign_in">Sign In</string>
+    <string name="dont_have_account">Don\'t have an account ?  </string>
+    <string name="sign_up"> Sign Up</string>
+    <string name="hide_password">Hide password</string>
+    <string name="show_password">Show password</string>
+    <string name="email_error">Please enter a valid email address</string>
+    <string name="password_error">Password must be at least 6 characters</string>
 </resources>
