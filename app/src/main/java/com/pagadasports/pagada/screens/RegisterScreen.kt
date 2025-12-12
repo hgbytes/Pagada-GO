@@ -102,28 +102,30 @@ fun RegisterScreen(
                 .verticalScroll(scrollState)
         ) {
             // Top App Bar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Create Account",
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 24.sp
+                        )
                     )
-                }
-                Text(
-                    text = "Create Account",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(start = 8.dp)
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
                 )
-            }
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -312,19 +314,20 @@ fun RegisterScreen(
 
                     // Terms and Conditions
                     Card(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier,
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
+                            containerColor = Color.Transparent
                         ),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Row(
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(5.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
                                 checked = termsAccepted,
                                 onCheckedChange = { termsAccepted = it },
+                                modifier = Modifier.size(20.dp),
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = MaterialTheme.colorScheme.primary
                                 )
@@ -334,19 +337,13 @@ fun RegisterScreen(
                                 val annotatedString = buildAnnotatedString {
                                     append("I agree to the ")
                                     pushStringAnnotation(tag = "URL", annotation = "https://www.pagadasports.com/terms")
-                                    withStyle(style = SpanStyle(
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.SemiBold
-                                    )) {
+                                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)) {
                                         append("Terms and Conditions")
                                     }
                                     pop()
                                     append(" and ")
                                     pushStringAnnotation(tag = "PRIVACY", annotation = "https://www.pagadasports.com/privacy")
-                                    withStyle(style = SpanStyle(
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.SemiBold
-                                    )) {
+                                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)) {
                                         append("Privacy Policy")
                                     }
                                     pop()
@@ -356,21 +353,18 @@ fun RegisterScreen(
                                 ClickableText(
                                     text = annotatedString,
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                                        fontSize = 9.sp
                                     )
                                 ) { offset ->
-                                    annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset).firstOrNull()?.let {
-                                        uriHandler.openUri(it.item)
-                                    }
-                                    annotatedString.getStringAnnotations(tag = "PRIVACY", start = offset, end = offset).firstOrNull()?.let {
-                                        uriHandler.openUri(it.item)
-                                    }
+                                    annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset).firstOrNull()?.let { uriHandler.openUri(it.item) }
+                                    annotatedString.getStringAnnotations(tag = "PRIVACY", start = offset, end = offset).firstOrNull()?.let { uriHandler.openUri(it.item) }
                                 }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    /*Spacer(modifier = Modifier.height(2.dp))*/
 
                     // Register Button
                     Button(
@@ -385,7 +379,7 @@ fun RegisterScreen(
                             .fillMaxWidth()
                             .height(56.dp),
                         enabled = isFormValid && !isLoading,
-                        shape = RoundedCornerShape(28.dp),
+                        shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         ),
@@ -393,7 +387,7 @@ fun RegisterScreen(
                     ) {
                         if (isLoading) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(21.dp),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 strokeWidth = 2.dp
                             )
@@ -408,7 +402,7 @@ fun RegisterScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+//                    Spacer(modifier = Modifier.height(2.dp))
 
                     // Login Link
                     val annotatedLoginString = buildAnnotatedString {
