@@ -45,11 +45,21 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // SECURITY: Enable code obfuscation and optimization
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // SECURITY: Disable debugging in release builds
+            isDebuggable = false
+            isJniDebuggable = false
+        }
+        debug {
+            // Keep debug symbols in debug builds
+            isMinifyEnabled = false
+            isDebuggable = true
         }
     }
     compileOptions {

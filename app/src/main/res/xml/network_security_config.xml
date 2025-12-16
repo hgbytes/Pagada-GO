@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- SECURITY: Enforce HTTPS for all network communication -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Trust preinstalled CAs -->
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- SECURITY: Certificate pinning for Supabase (optional but recommended) -->
+    <!-- Uncomment and add your Supabase domain for enhanced security
+    <domain-config>
+        <domain includeSubdomains="true">your-project.supabase.co</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+        <pin-set expiration="2026-12-31">
+            <pin digest="SHA-256">AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</pin>
+            <pin digest="SHA-256">BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=</pin>
+        </pin-set>
+    </domain-config>
+    -->
+    
+    <!-- SECURITY: Disable cleartext traffic for debugging -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+            <!-- Only allow user CAs in debug builds -->
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>
