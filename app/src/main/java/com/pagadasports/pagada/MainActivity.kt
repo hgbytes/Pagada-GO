@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.pagadasports.pagada.screens.ForgotPasswordScreen
 import com.pagadasports.pagada.screens.HomeScreen
 import com.pagadasports.pagada.screens.LandingScreen
 import com.pagadasports.pagada.screens.LoginScreen
@@ -35,7 +36,8 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate("home") {
                                     popUpTo("landing") { inclusive = true }
                                 }
-                            }
+                            },
+                            onForgotPasswordClick = { navController.navigate("forgot_password") }
                         )
                     }
                     composable("register") {
@@ -45,6 +47,16 @@ class MainActivity : ComponentActivity() {
                             onRegisterSuccess = {
                                 navController.navigate("home") {
                                     popUpTo("landing") { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                    composable("forgot_password") {
+                        ForgotPasswordScreen(
+                            onBackClick = { navController.popBackStack() },
+                            onSuccessNavigateToLogin = {
+                                navController.navigate("login") {
+                                    popUpTo("login") { inclusive = true }
                                 }
                             }
                         )

@@ -30,23 +30,78 @@ val MontserratFamily = FontFamily(
     Font(R.font.montserrat_blackitalic, FontWeight.Black, FontStyle.Italic)
 )
 
-// Set of Material typography styles to start with
+// Modern Typography System - Clear hierarchy with optimal readability
 val Typography = Typography(
-    displayLarge = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Normal),
-    displayMedium = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Normal),
-    displaySmall = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Normal),
-    headlineLarge = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Bold),
-    headlineMedium = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Bold),
-    headlineSmall = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Bold),
+    // Display - Hero text, largest headings
+    displayLarge = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 57.sp,
+        lineHeight = 64.sp,
+        letterSpacing = (-0.25).sp
+    ),
+    displayMedium = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 45.sp,
+        lineHeight = 52.sp,
+        letterSpacing = 0.sp
+    ),
+    displaySmall = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 36.sp,
+        lineHeight = 44.sp,
+        letterSpacing = 0.sp
+    ),
+    
+    // Headline - Section titles
+    headlineLarge = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 32.sp,
+        lineHeight = 40.sp,
+        letterSpacing = 0.sp
+    ),
+    headlineMedium = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 28.sp,
+        lineHeight = 36.sp,
+        letterSpacing = 0.sp
+    ),
+    headlineSmall = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
+        lineHeight = 32.sp,
+        letterSpacing = 0.sp
+    ),
+    
+    // Title - Card headers, dialog titles
     titleLarge = TextStyle(
         fontFamily = MontserratFamily,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 22.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp
     ),
-    titleMedium = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Medium),
-    titleSmall = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Medium),
+    titleMedium = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.15.sp
+    ),
+    titleSmall = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
+    
+    // Body - Main content text
     bodyLarge = TextStyle(
         fontFamily = MontserratFamily,
         fontWeight = FontWeight.Normal,
@@ -54,10 +109,36 @@ val Typography = Typography(
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     ),
-    bodyMedium = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Normal),
-    bodySmall = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Normal),
-    labelLarge = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Medium),
-    labelMedium = TextStyle(fontFamily = MontserratFamily, fontWeight = FontWeight.Medium),
+    bodyMedium = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.25.sp
+    ),
+    bodySmall = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.4.sp
+    ),
+    
+    // Label - Buttons, tabs, smaller UI elements
+    labelLarge = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.1.sp
+    ),
+    labelMedium = TextStyle(
+        fontFamily = MontserratFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 0.5.sp
+    ),
     labelSmall = TextStyle(
         fontFamily = MontserratFamily,
         fontWeight = FontWeight.Medium,

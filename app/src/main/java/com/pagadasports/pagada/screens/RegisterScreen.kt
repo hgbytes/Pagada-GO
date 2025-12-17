@@ -1,8 +1,20 @@
 package com.pagadasports.pagada.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
@@ -18,11 +30,16 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -35,7 +52,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pagadasports.pagada.R
+import com.pagadasports.pagada.ui.theme.*
 import com.pagadasports.pagada.viewmodel.AuthViewModel
+import com.pagadasports.pagada.utils.InputSanitizer
+import kotlinx.coroutines.delay
 
 private fun validatePassword(password: String): List<String> {
     val errors = mutableListOf<String>()
@@ -74,24 +95,29 @@ fun RegisterScreen(
     var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
     var termsAccepted by rememberSaveable { mutableStateOf(false) }
     var emailError by rememberSaveable { mutableStateOf("") }
+    var animationStarted by remember { mutableStateOf(false) }
 
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
     val authState by authViewModel.authState.collectAsState()
 
-    // Validation
-    val passwordErrors = validatePassword(password)
-    val isNameValid = name.isNotBlank()
-    val isEmailValid = email.isNotEmpty() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    // SECURITY: Enhanced validation with input sanitization
+    val passwordValidation = InputSanitizer.validatePasswordStrength(password)
+    val isNameValid = InputSanitizer.isValidName(name.trim())
+    val isEmailValid = InputSanitizer.isValidEmail(email.trim())
     val arePasswordsMatching = password == confirmPassword && confirmPassword.isNotEmpty()
-    val isPasswordValid = passwordErrors.isEmpty() && password.isNotEmpty()
+    val isPasswordValid = passwordValidation.isValid && password.isNotEmpty()
     val isFormValid = isNameValid && isEmailValid && arePasswordsMatching && isPasswordValid && termsAccepted
+
+    LaunchedEffect(Unit) {
+        delay(100)
+        animationStarted = true
+    }
 
     // Show error message when registration fails
     LaunchedEffect(authState.error) {
         authState.error?.let { error ->
             android.util.Log.d("RegisterScreen", "Auth error: $error")
-            // Check if it's an email already exists error
             if (error.contains("already", ignoreCase = true) ||
                 error.contains("exists", ignoreCase = true) ||
                 error.contains("registered", ignoreCase = true) ||
@@ -116,144 +142,156 @@ fun RegisterScreen(
         modifier = modifier
             .fillMaxSize()
             .background(
-                brush = Brush.verticalGradient(
+                brush = Brush.radialGradient(
                     colors = listOf(
-                        Color(0xFF0D0D0D),
-                        Color(0xFF1A1A2E),
-                        Color(0xFF0D0D0D)
-                    )
+                        Color(0xFF6B4CE8),
+                        Color(0xFF4A148C),
+                        BackgroundDark
+                    ),
+                    center = androidx.compose.ui.geometry.Offset(0f, 0f),
+                    radius = 1500f
                 )
             )
     ) {
+        // Sporty Background Decorations
+        SportyBackgroundDecoration()
+        
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
                 .verticalScroll(scrollState)
         ) {
-            // Top App Bar
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Create Account",
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 24.sp
-                        )
-                    )
-                },
-                navigationIcon = {
+            // Top Bar with Back Button
+            AnimatedVisibility(
+                visible = animationStarted,
+                enter = fadeIn(tween(400)) + slideInVertically(
+                    animationSpec = tween(400),
+                    initialOffsetY = { -50 }
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(PagadaSpacing.medium),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
+                            tint = Color.White
                         )
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
+                }
+            }
+
+            Spacer(modifier = Modifier.height(PagadaSpacing.small))
+
+            // Registration Form Card with Sporty Design
+            AnimatedVisibility(
+                visible = animationStarted,
+                enter = fadeIn(tween(600, delayMillis = 200)) + slideInVertically(
+                    animationSpec = tween(600, delayMillis = 200),
+                    initialOffsetY = { 100 }
                 )
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Registration Form
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f)
-                ),
-                shape = RoundedCornerShape(24.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
-                Column(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                        .padding(horizontal = PagadaSpacing.large)
+                        .animateContentSize(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(28.dp),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 16.dp
+                    )
                 ) {
-                    Text(
-                        text = "Join the Pagada community",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                        textAlign = TextAlign.Center
-                    )
-
-                    // Name Field
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Full Name") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Name",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                        ),
-                        singleLine = true,
-                        isError = !isNameValid && name.isNotEmpty(),
-                        supportingText = if (!isNameValid && name.isNotEmpty()) {
-                            { Text("Name cannot be empty", color = MaterialTheme.colorScheme.error) }
-                        } else null,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                            focusedLabelColor = MaterialTheme.colorScheme.primary
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(PagadaSpacing.extraLarge),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // Pagada Logo (Circular)
+                        androidx.compose.foundation.Image(
+                            painter = painterResource(id = R.drawable.logo_pagada),
+                            contentDescription = "Pagada Logo",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(CircleShape)
+                                .padding(PagadaSpacing.extraSmall),
+                            contentScale = ContentScale.Crop
                         )
-                    )
 
-                    // Email Field
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = {
-                            email = it
-                            emailError = "" // Clear error when user types
-                            authViewModel.clearError() // Clear error in ViewModel too
-                        },
-                        label = { Text("Email Address") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Email,
-                                contentDescription = "Email",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Email,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                        ),
-                        singleLine = true,
-                        isError = emailError.isNotEmpty() || (!isEmailValid && email.isNotEmpty()),
-                        supportingText = if (emailError.isNotEmpty()) {
-                            { Text(emailError, color = MaterialTheme.colorScheme.error) }
-                        } else if (!isEmailValid && email.isNotEmpty()) {
-                            { Text("Please enter a valid email address", color = MaterialTheme.colorScheme.error) }
-                        } else null,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                            focusedLabelColor = MaterialTheme.colorScheme.primary
+                        Spacer(modifier = Modifier.height(PagadaSpacing.medium))
+
+                        Text(
+                            text = "JOIN THE TEAM",
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 1.5.sp
+                            ),
+                            color = Color(0xFF1A1A3E),
+                            textAlign = TextAlign.Center
                         )
-                    )
+
+                        Text(
+                            text = "Create your player account",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = Color(0xFF6B4CE8),
+                            modifier = Modifier.padding(top = PagadaSpacing.extraSmall)
+                        )
+
+                        Spacer(modifier = Modifier.height(PagadaSpacing.large))
+
+                        // Name Field with SECURITY validation
+                        SportyTextField(
+                            value = name,
+                            onValueChange = { 
+                                // SECURITY: Sanitize input in real-time
+                                name = InputSanitizer.sanitizeName(it)
+                            },
+                            label = "Full Name",
+                            leadingIcon = Icons.Default.Person,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                            ),
+                            isError = !isNameValid && name.isNotEmpty(),
+                            errorMessage = if (!isNameValid && name.isNotEmpty()) "Please enter a valid name (letters, spaces, hyphens only)" else ""
+                        )
+
+                        Spacer(modifier = Modifier.height(PagadaSpacing.medium))
+
+                        // Email Field with SECURITY sanitization
+                        SportyTextField(
+                            value = email,
+                            onValueChange = {
+                                // SECURITY: Sanitize email input
+                                email = InputSanitizer.sanitizeEmail(it)
+                                emailError = ""
+                                authViewModel.clearError()
+                            },
+                            label = "Email Address",
+                            leadingIcon = Icons.Default.Email,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Email,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                            ),
+                            isError = emailError.isNotEmpty() || (!isEmailValid && email.isNotEmpty()),
+                            errorMessage = if (emailError.isNotEmpty()) emailError else if (!isEmailValid && email.isNotEmpty()) "Please enter a valid email address" else ""
+                        )
 
                     // Show "Already have an account?" card when email exists
                     if (emailError.contains("already registered", ignoreCase = true)) {
@@ -286,7 +324,7 @@ fun RegisterScreen(
                                 ) {
                                     Text(
                                         "Login Here",
-                                        color = MaterialTheme.colorScheme.primary,
+                                        color = AccentPink,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
@@ -294,97 +332,63 @@ fun RegisterScreen(
                         }
                     }
 
-                    // Password Field
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Create Password") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Password",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    imageVector = if (passwordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                                    contentDescription = if (passwordVisible) "Hide password" else "Show password",
-                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Next
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                        ),
-                        singleLine = true,
-                        isError = passwordErrors.isNotEmpty() && password.isNotEmpty(),
-                        supportingText = if (passwordErrors.isNotEmpty() && password.isNotEmpty()) {
-                            {
-                                Text(
-                                    "Password must:\n" + passwordErrors.joinToString(separator = "\n") { "• $it" },
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
-                            }
-                        } else null,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                            focusedLabelColor = MaterialTheme.colorScheme.primary
+                        // Password Field
+                        SportyTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            label = "Create Password",
+                            leadingIcon = Icons.Default.Lock,
+                            trailingIcon = {
+                                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                    Icon(
+                                        imageVector = if (passwordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                                        contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                        tint = Color(0xFF6B4CE8)
+                                    )
+                                }
+                            },
+                            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                            ),
+                            isError = !passwordValidation.isValid && password.isNotEmpty(),
+                            errorMessage = if (!passwordValidation.isValid && password.isNotEmpty()) "Password must:\n" + passwordValidation.errors.joinToString(separator = "\n") { "• $it" } else ""
                         )
-                    )
 
-                    // Confirm Password Field
-                    OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        label = { Text("Confirm Password") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Confirm Password",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        },
-                        trailingIcon = {
-                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
-                                Icon(
-                                    imageVector = if (confirmPasswordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                                    contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
-                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                )
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Password,
-                            imeAction = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onDone = { focusManager.clearFocus() }
-                        ),
-                        singleLine = true,
-                        isError = !arePasswordsMatching && confirmPassword.isNotEmpty(),
-                        supportingText = if (!arePasswordsMatching && confirmPassword.isNotEmpty()) {
-                            { Text("Passwords do not match", color = MaterialTheme.colorScheme.error) }
-                        } else null,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                            focusedLabelColor = MaterialTheme.colorScheme.primary
+                        Spacer(modifier = Modifier.height(PagadaSpacing.medium))
+
+                        // Confirm Password Field
+                        SportyTextField(
+                            value = confirmPassword,
+                            onValueChange = { confirmPassword = it },
+                            label = "Confirm Password",
+                            leadingIcon = Icons.Default.Lock,
+                            trailingIcon = {
+                                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                    Icon(
+                                        imageVector = if (confirmPasswordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
+                                        contentDescription = if (confirmPasswordVisible) "Hide password" else "Show password",
+                                        tint = Color(0xFF6B4CE8)
+                                    )
+                                }
+                            },
+                            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = { focusManager.clearFocus() }
+                            ),
+                            isError = !arePasswordsMatching && confirmPassword.isNotEmpty(),
+                            errorMessage = if (!arePasswordsMatching && confirmPassword.isNotEmpty()) "Passwords do not match" else ""
                         )
-                    )
+
+                        Spacer(modifier = Modifier.height(PagadaSpacing.medium))
 
                     // Terms and Conditions
                     Card(
@@ -401,9 +405,10 @@ fun RegisterScreen(
                             Checkbox(
                                 checked = termsAccepted,
                                 onCheckedChange = { termsAccepted = it },
-                                modifier = Modifier.size(20.dp),
+                                modifier = Modifier.size(22.dp),
                                 colors = CheckboxDefaults.colors(
-                                    checkedColor = MaterialTheme.colorScheme.primary
+                                    checkedColor = PrimaryPurple,
+                                    uncheckedColor = TextTertiary
                                 )
                             )
 
@@ -411,13 +416,13 @@ fun RegisterScreen(
                                 val annotatedString = buildAnnotatedString {
                                     append("I agree to the ")
                                     pushStringAnnotation(tag = "URL", annotation = "https://www.pagadasports.com/terms")
-                                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)) {
+                                    withStyle(style = SpanStyle(color = PrimaryPurple, fontWeight = FontWeight.SemiBold)) {
                                         append("Terms and Conditions")
                                     }
                                     pop()
                                     append(" and ")
                                     pushStringAnnotation(tag = "PRIVACY", annotation = "https://www.pagadasports.com/privacy")
-                                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)) {
+                                    withStyle(style = SpanStyle(color = PrimaryPurple, fontWeight = FontWeight.SemiBold)) {
                                         append("Privacy Policy")
                                     }
                                     pop()
@@ -427,8 +432,8 @@ fun RegisterScreen(
                                 ClickableText(
                                     text = annotatedString,
                                     style = MaterialTheme.typography.bodySmall.copy(
-                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
-                                        fontSize = 9.sp
+                                        color = TextSecondary,
+                                        fontSize = 11.sp
                                     )
                                 ) { offset ->
                                     annotatedString.getStringAnnotations(tag = "URL", start = offset, end = offset).firstOrNull()?.let { uriHandler.openUri(it.item) }
@@ -438,78 +443,229 @@ fun RegisterScreen(
                         }
                     }
 
-                    /*Spacer(modifier = Modifier.height(2.dp))*/
+                        Spacer(modifier = Modifier.height(PagadaSpacing.medium))
 
-                    // Register Button
-                    Button(
-                        onClick = {
-                            focusManager.clearFocus()
-                            if (isFormValid) {
-                                authViewModel.signUp(email, password, name)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        enabled = isFormValid && !authState.isLoading,
-                        shape = RoundedCornerShape(24.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        ),
-                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
-                    ) {
-                        if (authState.isLoading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(21.dp),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text(
-                                text = "Create Account",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.SemiBold
-                                ),
-                                fontSize = 18.sp
-                            )
-                        }
-                    }
-
-//                    Spacer(modifier = Modifier.height(2.dp))
-
-                    // Login Link
-                    val annotatedLoginString = buildAnnotatedString {
-                        append("Already have an account? ")
-                        pushStringAnnotation(tag = "LOGIN", annotation = "login")
-                        withStyle(
-                            style = SpanStyle(
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        ) {
-                            append("Sign In")
-                        }
-                        pop()
-                    }
-
-                    ClickableText(
-                        text = annotatedLoginString,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            textAlign = TextAlign.Center
+                        // Sporty Gradient Register Button
+                        val buttonInteraction = remember { MutableInteractionSource() }
+                        val isPressed by buttonInteraction.collectIsPressedAsState()
+                        val buttonScale by animateFloatAsState(
+                            targetValue = if (isPressed) 0.95f else 1f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessLow
+                            ),
+                            label = "buttonScale"
                         )
-                    ) { offset ->
-                        annotatedLoginString.getStringAnnotations(
-                            tag = "LOGIN",
-                            start = offset,
-                            end = offset
-                        ).firstOrNull()?.let {
-                            onLoginClick()
+
+                        Button(
+                            onClick = {
+                                focusManager.clearFocus()
+                                if (isFormValid) {
+                                    // SECURITY: Final validation before submission
+                                    val sanitizedName = InputSanitizer.sanitizeName(name)
+                                    val sanitizedEmail = InputSanitizer.sanitizeEmail(email)
+                                    authViewModel.signUp(sanitizedEmail, password, sanitizedName)
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(60.dp)
+                                .graphicsLayer {
+                                    scaleX = buttonScale
+                                    scaleY = buttonScale
+                                },
+                            enabled = isFormValid && !authState.isLoading,
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Transparent,
+                                disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            interactionSource = buttonInteraction
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(
+                                                Color(0xFF6B4CE8),
+                                                Color(0xFFE91E8C)
+                                            )
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (authState.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(28.dp),
+                                        color = Color.White,
+                                        strokeWidth = 3.dp
+                                    )
+                                } else {
+                                    Text(
+                                        text = "CREATE ACCOUNT",
+                                        style = MaterialTheme.typography.titleLarge.copy(
+                                            fontWeight = FontWeight.ExtraBold,
+                                            letterSpacing = 1.5.sp
+                                        ),
+                                        color = Color.White,
+                                        fontSize = 18.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(PagadaSpacing.large))
+
+                        // Login Link with Sporty Style
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Already on the team? ",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color(0xFF1A1A3E)
+                            )
+                            TextButton(
+                                onClick = onLoginClick,
+                                contentPadding = PaddingValues(0.dp)
+                            ) {
+                                Text(
+                                    text = "SIGN IN",
+                                    color = Color(0xFFE91E8C),
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontWeight = FontWeight.ExtraBold,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            // Extra bottom spacing to ensure content is visible above keyboard
+            Spacer(modifier = Modifier.height(200.dp))
         }
+    }
+}
+
+@Composable
+private fun SportyTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    isError: Boolean = false,
+    errorMessage: String = ""
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { 
+            Text(
+                label,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+            ) 
+        },
+        leadingIcon = {
+            Icon(
+                imageVector = leadingIcon,
+                contentDescription = label,
+                tint = if (isFocused) PrimaryPurple else Color.Gray
+            )
+        },
+        trailingIcon = trailingIcon,
+        modifier = modifier.fillMaxWidth(),
+        textStyle = MaterialTheme.typography.bodyLarge.copy(
+            color = Color.Black,
+            fontWeight = FontWeight.Medium
+        ),
+        visualTransformation = visualTransformation,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        singleLine = true,
+        isError = isError,
+        supportingText = if (errorMessage.isNotEmpty()) {
+            { Text(errorMessage, color = AccentPink, fontWeight = FontWeight.Medium) }
+        } else null,
+        shape = RoundedCornerShape(14.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedTextColor = Color.Black,
+            unfocusedTextColor = Color.Black,
+            disabledTextColor = Color.Black,
+            errorTextColor = Color.Black,
+            focusedContainerColor = Color(0xFFF5F5FF),
+            unfocusedContainerColor = Color(0xFFF8F8F8),
+            focusedBorderColor = PrimaryPurple,
+            unfocusedBorderColor = Color.Gray.copy(alpha = 0.3f),
+            focusedLabelColor = Color.Black,
+            unfocusedLabelColor = Color.Black,
+            cursorColor = PrimaryPurple,
+            focusedPlaceholderColor = Color.Gray,
+            unfocusedPlaceholderColor = Color.Gray,
+            errorBorderColor = Color.Red,
+            errorLabelColor = Color.Red,
+            errorCursorColor = Color.Red
+        ),
+        interactionSource = interactionSource
+    )
+}
+
+// Sporty Background Decoration Component
+@Composable
+private fun SportyBackgroundDecoration() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier
+                .size(300.dp)
+                .offset(x = (-100).dp, y = (-100).dp)
+                .alpha(0.15f),
+            shape = CircleShape,
+            color = AccentPink
+        ) {}
+        
+        Surface(
+            modifier = Modifier
+                .size(200.dp)
+                .align(Alignment.TopEnd)
+                .offset(x = 80.dp, y = (-50).dp)
+                .alpha(0.1f),
+            shape = CircleShape,
+            color = Color(0xFFE91E8C)
+        ) {}
+        
+        Surface(
+            modifier = Modifier
+                .size(250.dp)
+                .align(Alignment.BottomStart)
+                .offset(x = (-80).dp, y = 100.dp)
+                .alpha(0.12f),
+            shape = CircleShape,
+            color = PrimaryPurple
+        ) {}
+        
+        Surface(
+            modifier = Modifier
+                .size(180.dp)
+                .align(Alignment.BottomEnd)
+                .offset(x = 60.dp, y = 80.dp)
+                .alpha(0.08f),
+            shape = CircleShape,
+            color = Color.Black
+        ) {}
     }
 }

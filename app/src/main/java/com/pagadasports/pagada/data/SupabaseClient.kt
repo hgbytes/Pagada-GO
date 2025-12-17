@@ -22,7 +22,11 @@ object SupabaseClient {
         supabaseUrl = BuildConfig.SUPABASE_URL,
         supabaseKey = BuildConfig.SUPABASE_ANON_KEY
     ) {
-        install(Auth)
+        install(Auth) {
+            // SECURITY: Secure authentication settings
+            autoLoadFromStorage = true
+            autoSaveToStorage = true
+        }
         install(Postgrest)
         // Add more plugins as needed:
         // install(Storage)
