@@ -11,6 +11,7 @@ import com.pagadasports.pagada.screens.ForgotPasswordScreen
 import com.pagadasports.pagada.screens.HomeScreen
 import com.pagadasports.pagada.screens.LandingScreen
 import com.pagadasports.pagada.screens.LoginScreen
+import com.pagadasports.pagada.screens.ProfileScreen
 import com.pagadasports.pagada.screens.RegisterScreen
 import com.pagadasports.pagada.ui.theme.PagadaTheme
 
@@ -45,7 +46,7 @@ class MainActivity : ComponentActivity() {
                             onLoginClick = { navController.navigate("login") },
                             onBackClick = { navController.popBackStack() },
                             onRegisterSuccess = {
-                                navController.navigate("home") {
+                                navController.navigate("profile") {
                                     popUpTo("landing") { inclusive = true }
                                 }
                             }
@@ -57,6 +58,15 @@ class MainActivity : ComponentActivity() {
                             onSuccessNavigateToLogin = {
                                 navController.navigate("login") {
                                     popUpTo("login") { inclusive = true }
+                                }
+                            }
+                        )
+                    }
+                    composable("profile") {
+                        ProfileScreen(
+                            onLogoutClick = {
+                                navController.navigate("landing") {
+                                    popUpTo(0) { inclusive = true }
                                 }
                             }
                         )
