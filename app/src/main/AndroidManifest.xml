@@ -24,7 +24,7 @@
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Pagada"
-            android:windowSoftInputMode="adjustResize"
+            android:windowSoftInputMode="adjustPan"
             android:screenOrientation="portrait"
             android:launchMode="singleTop">
             <intent-filter>
